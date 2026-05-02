@@ -1,379 +1,58 @@
-import { useMemo, useState } from 'react'
-import {
-  BookOpen,
-  CalendarDays,
-  CheckCircle2,
-  ChevronRight,
-  Download,
-  Edit3,
-  FileArchive,
-  FileText,
-  Globe2,
-  KeyRound,
-  Lock,
-  Mail,
-  Menu,
-  PenTool,
-  Search,
-  Send,
-  Upload,
-  Users,
-  X,
-} from 'lucide-react'
-import './App.css'
+import { useMemo, useState } from 'react' import { BookOpen, CalendarDays, CheckCircle2, ChevronRight, Download, Edit3, FileArchive, FileText, Globe2, KeyRound, Lock, Mail, Menu, PenTool, Search, Send, Upload, Users, X, } from 'lucide-react' import './App.css' type PageKey = 'home' | 'submit' | 'authors' | 'committee' | 'issues' | 'contact' | 'admin' type Issue = { volume: string number: string date: string papers: string[] } type Submission = { firstName: string lastName: string email: string title: string abstract: string fileName: string } type SubmissionStatus = { type: 'idle' | 'sending' | 'success' | 'error' message: string } const editorEmail = 'hamzamadjid.berrabah@univ-relizane.dz' const pages: { key: PageKey; label: string }[] = [ { key: 'home', label: 'Home' }, { key: 'submit', label: 'Submit Article' }, { key: 'authors', label: 'Guide for Authors' }, { key: 'committee', label: 'Editorial Committee' }, { key: 'issues', label: 'All Issues' }, { key: 'contact', label: 'Contact' }, ] const issues: Issue[] = [ { volume: 'Volume 5', number: 'Issue 4', date: 'December 2024', papers: ['Advanced cementitious composites for resilient structures', 'Numerical assessment of bridge deck fatigue', 'Thermal behavior of sustainable masonry units'], }, { volume: 'Volume 5', number: 'Issue 3', date: 'September 2024', papers: ['Durability of reinforced concrete in aggressive environments', 'Microstructure and mechanical response of geopolymer binders', 'Seismic strengthening techniques for existing buildings'], }, { volume: 'Volume 5', number: 'Issue 2', date: 'June 2024', papers: ['Recycled aggregates in structural concrete', 'Experimental study of steel beam-column joints', 'Optimization methods in structural health monitoring'], }, { volume: 'Volume 5', number: 'Issue 1', date: 'March 2024', papers: ['Eco-efficient materials for civil engineering', 'Finite element modelling of composite slabs', 'Performance-based design for earthquake engineering'], }, ] const committeeMembers = [ 'Pr. BERRABAH HAMZA MADJID — Editor-in-Chief', 'Publication Director — Journal of Materials and Structures', 'Associate Editors — Materials Science, Civil Engineering, Structural Mechanics', 'International Editorial Board — University researchers and peer reviewers', 'Technical Secretariat — Manuscript screening, layout and archive management', ] function App() { const [activePage, setActivePage] = useState('home') const [menuOpen, setMenuOpen] = useState(false) const [adminUnlocked, setAdminUnlocked] = useState(false) const [adminPassword, setAdminPassword] = useState('') const [journalTitle, setJournalTitle] = useState('Journal of Materials and Structures') const [announcement, setAnnouncement] = useState('Call for papers: manuscripts are welcomed from university researchers in materials, civil engineering, structural analysis and innovative construction systems.') const [directorText, setDirectorText] = useState('The Publication Director and Editorial Committee ensure academic integrity, double-blind peer review, ethical publishing practices and international visibility for all accepted papers.') const [guideText, setGuideText] = useState('Authors must submit original manuscripts written in clear scientific English, following the journal template, with references, figures and tables formatted according to the provided instructions.') const [templateName, setTemplateName] = useState('JMS_Template.docx') const [coverLetterName, setCoverLetterName] = useState('JMS_Cover_Letter.docx') const [submission, setSubmission] = useState(null) const [submissionStatus, setSubmissionStatus] = useState({ type: 'idle', message: '' }) const encodedSlug = useMemo(() => encodeURIComponent('Pr BERRABAH HAMZA MADJID Journal of Materials and Structures'), []) const navigate = (page: PageKey) => { setActivePage(page) setMenuOpen(false) window.scrollTo({ top: 0, behavior: 'smooth' }) } const handleSubmission = async (event: React.FormEvent) => { event.preventDefault() const form = event.currentTarget const data = new FormData(form) const file = data.get('attachment') as File | null const nextSubmission = { firstName: String(data.get('firstName') || ''), lastName: String(data.get('lastName') || ''), email: String(data.get('email') || ''), title: String(data.get('articleTitle') || ''), abstract: String(data.get('abstract') || ''), fileName: file?.name || 'No file selected', } setSubmission(nextSubmission) setSubmissionStatus({ type: 'sending', message: 'Sending the manuscript and attachment directly to the Editor-in-Chief e-mail...' }) try { const response = await fetch('/api/submit-manuscript', { method: 'POST', body: data, }) const result = await response.json() if (!response.ok) { throw new Error(result.message || 'Submission failed') } setSubmissionStatus({ type: 'success', message: 'Manuscript submitted successfully. The article file was transmitted as an e-mail attachment.' }) form.reset() } catch (error) { setSubmissionStatus({ type: 'error', message: error instanceof Error ? error.message : 'The manuscript could not be transmitted. Please try again.', }) } } const downloadTextFile = (fileName: string, content: string) => { const blob = new Blob([content], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document;charset=utf-8' }) const url = URL.createObjectURL(blob) const link = document.createElement('a') link.href = url link.download = fileName document.body.appendChild(link) link.click() link.remove() URL.revokeObjectURL(url) } const unlockAdmin = (event: React.FormEvent) => { event.preventDefault() if (adminPassword.trim().length >= 6) { setAdminUnlocked(true) } } return (
+navigate('home')} className="group flex items-center gap-3 text-left" aria-label="Go to homepage">
+Pr BERRABAH HAMZA MADJID
 
-type PageKey = 'home' | 'submit' | 'authors' | 'committee' | 'issues' | 'contact' | 'admin'
-
-type Issue = {
-  volume: string
-  number: string
-  date: string
-  papers: string[]
+{journalTitle}
+{pages.map((page) => ( navigate(page.key)} className={`rounded-full px-4 py-2 text-sm font-bold transition ${activePage === page.key ? 'bg-orange-500 text-white shadow-md' : 'text-emerald-950 hover:bg-white/70 hover:text-orange-600'}`} > {page.label} ))} navigate('admin')} className="ml-2 rounded-full bg-emerald-950 px-4 py-2 text-sm font-bold text-orange-300 transition hover:bg-emerald-800"> Admin Access
+setMenuOpen(!menuOpen)} className="rounded-xl bg-white/70 p-3 text-emerald-950 shadow-sm lg:hidden" aria-label="Open menu"> {menuOpen ? :
 }
+{menuOpen && (
+{[...pages, { key: 'admin' as PageKey, label: 'Admin Access' }].map((page) => ( navigate(page.key)} className="rounded-xl bg-white/70 px-4 py-3 text-left font-bold text-emerald-950"> {page.label} ))}
+)}
+{activePage === 'home' && (
+National scientific journal for university researchers
+A professional platform for materials science and structural engineering research.
+{journalTitle} is a quarterly national scientific review edited since 2020 under the direction of Editor-in-Chief Pr. BERRABAH HAMZA MADJID. The journal welcomes rigorous, original and peer-reviewed contributions in materials, structures and civil engineering.
 
-type Submission = {
-  firstName: string
-  lastName: string
-  email: string
-  title: string
-  abstract: string
-  fileName: string
-}
+navigate('submit')} className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-7 py-4 font-black text-white shadow-xl shadow-orange-500/25 transition hover:-translate-y-1 hover:bg-orange-600"> Submit your article navigate('authors')} className="inline-flex items-center gap-2 rounded-full border-2 border-emerald-950 px-7 py-4 font-black text-emerald-950 transition hover:bg-emerald-950 hover:text-orange-300"> Author guidelines
+Journal Identity
 
-type SubmissionStatus = {
-  type: 'idle' | 'sending' | 'success' | 'error'
-  message: string
-}
+ISSN 2716-8077
+} label="Editor-in-Chief" value="Pr. BERRABAH HAMZA MADJID" /> } label="Edited" value="2020" /> } label="Frequency" value="Quarterly" /> } label="Scope" value="Materials • Structures • Civil Engineering" />
+Current announcement
+{announcement}
 
-const editorEmail = 'hamzamadjid.berrabah@univ-relizane.dz'
+)} {activePage === 'submit' && } {activePage === 'authors' && } {activePage === 'committee' && } {activePage === 'issues' && } {activePage === 'contact' && } {activePage === 'admin' && ( )}
+Pr BERRABAH HAMZA MADJID
 
-const pages: { key: PageKey; label: string }[] = [
-  { key: 'home', label: 'Home' },
-  { key: 'submit', label: 'Submit Article' },
-  { key: 'authors', label: 'Guide for Authors' },
-  { key: 'committee', label: 'Editorial Committee' },
-  { key: 'issues', label: 'All Issues' },
-  { key: 'contact', label: 'Contact' },
-]
+{journalTitle}
+ISSN: 2716-8077 • Edited: 2020 • Quarterly publication
 
-const issues: Issue[] = [
-  {
-    volume: 'Volume 5',
-    number: 'Issue 4',
-    date: 'December 2024',
-    papers: ['Advanced cementitious composites for resilient structures', 'Numerical assessment of bridge deck fatigue', 'Thermal behavior of sustainable masonry units'],
-  },
-  {
-    volume: 'Volume 5',
-    number: 'Issue 3',
-    date: 'September 2024',
-    papers: ['Durability of reinforced concrete in aggressive environments', 'Microstructure and mechanical response of geopolymer binders', 'Seismic strengthening techniques for existing buildings'],
-  },
-  {
-    volume: 'Volume 5',
-    number: 'Issue 2',
-    date: 'June 2024',
-    papers: ['Recycled aggregates in structural concrete', 'Experimental study of steel beam-column joints', 'Optimization methods in structural health monitoring'],
-  },
-  {
-    volume: 'Volume 5',
-    number: 'Issue 1',
-    date: 'March 2024',
-    papers: ['Eco-efficient materials for civil engineering', 'Finite element modelling of composite slabs', 'Performance-based design for earthquake engineering'],
-  },
-]
+Contact Editor-in-Chief
+) } function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) { return (
+{icon}
+{label}
 
-const committeeMembers = [
-  'Pr. BERRABAH HAMZA MADJID — Editor-in-Chief',
-  'Publication Director — Journal of Materials and Structures',
-  'Associate Editors — Materials Science, Civil Engineering, Structural Mechanics',
-  'International Editorial Board — University researchers and peer reviewers',
-  'Technical Secretariat — Manuscript screening, layout and archive management',
-]
+{value}
 
-function App() {
-  const [activePage, setActivePage] = useState<PageKey>('home')
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [adminUnlocked, setAdminUnlocked] = useState(false)
-  const [adminPassword, setAdminPassword] = useState('')
-  const [journalTitle, setJournalTitle] = useState('Journal of Materials and Structures')
-  const [announcement, setAnnouncement] = useState('Call for papers: manuscripts are welcomed from university researchers in materials, civil engineering, structural analysis and innovative construction systems.')
-  const [directorText, setDirectorText] = useState('The Publication Director and Editorial Committee ensure academic integrity, double-blind peer review, ethical publishing practices and international visibility for all accepted papers.')
-  const [guideText, setGuideText] = useState('Authors must submit original manuscripts written in clear scientific English, following the journal template, with references, figures and tables formatted according to the provided instructions.')
-  const [templateName, setTemplateName] = useState('JMS_Template.docx')
-  const [coverLetterName, setCoverLetterName] = useState('JMS_Cover_Letter.docx')
-  const [submission, setSubmission] = useState<Submission | null>(null)
-  const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>({ type: 'idle', message: '' })
+) } function Stats() { return (
+{[ ['2020', 'Year of first edition'], ['Quarterly', 'Publication frequency'], ['2716-8077', 'ISSN registration'], ['Peer Review', 'Scientific evaluation'], ].map(([value, label]) => (
+{value}
 
-  const encodedSlug = useMemo(() => encodeURIComponent('Pr BERRABAH HAMZA MADJID Journal of Materials and Structures'), [])
+{label}
 
-  const navigate = (page: PageKey) => {
-    setActivePage(page)
-    setMenuOpen(false)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
+))}
+) } function ScopeSection({ navigate }: { navigate: (page: PageKey) => void }) { const scopes = ['Advanced building materials', 'Structural analysis and design', 'Concrete technology and durability', 'Seismic engineering', 'Sustainable construction', 'Numerical modelling'] return (
+Scientific scope
 
-  const handleSubmission = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const form = event.currentTarget
-    const data = new FormData(form)
-    const file = data.get('attachment') as File | null
-    const nextSubmission = {
-      firstName: String(data.get('firstName') || ''),
-      lastName: String(data.get('lastName') || ''),
-      email: String(data.get('email') || ''),
-      title: String(data.get('articleTitle') || ''),
-      abstract: String(data.get('abstract') || ''),
-      fileName: file?.name || 'No file selected',
-    }
-    setSubmission(nextSubmission)
-    setSubmissionStatus({ type: 'sending', message: 'Sending the manuscript and attachment directly to the Editor-in-Chief e-mail...' })
+Designed like recognized international scientific journals
+navigate('issues')} className="rounded-full bg-emerald-950 px-6 py-3 font-black text-orange-300 hover:bg-emerald-800">View all issues
+{scopes.map((scope) => (
+{scope}
 
-    try {
-      const response = await fetch('/api/submit-manuscript', {
-        method: 'POST',
-        body: data,
-      })
-      const result = await response.json()
-      if (!response.ok) {
-        throw new Error(result.message || 'Submission failed')
-      }
-      setSubmissionStatus({ type: 'success', message: 'Manuscript submitted successfully. The article file was transmitted as an e-mail attachment.' })
-      form.reset()
-    } catch (error) {
-      setSubmissionStatus({
-        type: 'error',
-        message: error instanceof Error ? error.message : 'The manuscript could not be transmitted. Please try again.',
-      })
-    }
-  }
-
-  const downloadTextFile = (fileName: string, content: string) => {
-    const blob = new Blob([content], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = fileName
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
-  }
-
-  const unlockAdmin = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (adminPassword.trim().length >= 6) {
-      setAdminUnlocked(true)
-    }
-  }
-
-  return (
-    <div className="min-h-screen bg-[#dff4d8] text-neutral-950">
-      <header className="sticky top-0 z-50 border-b border-emerald-900/10 bg-[#dff4d8]/95 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <button onClick={() => navigate('home')} className="group flex items-center gap-3 text-left" aria-label="Go to homepage">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-950 text-orange-400 shadow-lg shadow-emerald-900/20">
-              <BookOpen size={25} />
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.35em] text-orange-600">Pr BERRABAH HAMZA MADJID</p>
-              <h1 className="text-base font-black tracking-tight sm:text-xl">{journalTitle}</h1>
-            </div>
-          </button>
-
-          <nav className="hidden items-center gap-1 lg:flex">
-            {pages.map((page) => (
-              <button
-                key={page.key}
-                onClick={() => navigate(page.key)}
-                className={`rounded-full px-4 py-2 text-sm font-bold transition ${activePage === page.key ? 'bg-orange-500 text-white shadow-md' : 'text-emerald-950 hover:bg-white/70 hover:text-orange-600'}`}
-              >
-                {page.label}
-              </button>
-            ))}
-            <button onClick={() => navigate('admin')} className="ml-2 rounded-full bg-emerald-950 px-4 py-2 text-sm font-bold text-orange-300 transition hover:bg-emerald-800">
-              Admin Access
-            </button>
-          </nav>
-
-          <button onClick={() => setMenuOpen(!menuOpen)} className="rounded-xl bg-white/70 p-3 text-emerald-950 shadow-sm lg:hidden" aria-label="Open menu">
-            {menuOpen ? <X /> : <Menu />}
-          </button>
-        </div>
-        {menuOpen && (
-          <div className="border-t border-emerald-900/10 bg-[#dff4d8] px-4 py-4 lg:hidden">
-            <div className="grid gap-2">
-              {[...pages, { key: 'admin' as PageKey, label: 'Admin Access' }].map((page) => (
-                <button key={page.key} onClick={() => navigate(page.key)} className="rounded-xl bg-white/70 px-4 py-3 text-left font-bold text-emerald-950">
-                  {page.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </header>
-
-      <main>
-        {activePage === 'home' && (
-          <section>
-            <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:px-8 lg:py-20">
-              <div className="flex flex-col justify-center">
-                <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-orange-400/40 bg-white/70 px-4 py-2 text-sm font-bold text-orange-700">
-                  <Globe2 size={18} /> National scientific journal for university researchers
-                </div>
-                <h2 className="max-w-4xl text-4xl font-black leading-tight tracking-tight text-emerald-950 sm:text-6xl">
-                  A professional platform for materials science and structural engineering research.
-                </h2>
-                <p className="mt-6 max-w-3xl text-lg leading-8 text-neutral-800">
-                  {journalTitle} is a quarterly national scientific review edited since 2020 under the direction of <strong>Editor-in-Chief Pr. BERRABAH HAMZA MADJID</strong>. The journal welcomes rigorous, original and peer-reviewed contributions in materials, structures and civil engineering.
-                </p>
-                <div className="mt-8 flex flex-wrap gap-4">
-                  <button onClick={() => navigate('submit')} className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-7 py-4 font-black text-white shadow-xl shadow-orange-500/25 transition hover:-translate-y-1 hover:bg-orange-600">
-                    Submit your article <Send size={18} />
-                  </button>
-                  <button onClick={() => navigate('authors')} className="inline-flex items-center gap-2 rounded-full border-2 border-emerald-950 px-7 py-4 font-black text-emerald-950 transition hover:bg-emerald-950 hover:text-orange-300">
-                    Author guidelines <ChevronRight size={18} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="rounded-[2rem] border border-white/70 bg-white/65 p-6 shadow-2xl shadow-emerald-900/10">
-                <div className="rounded-[1.5rem] bg-emerald-950 p-7 text-white">
-                  <p className="text-sm font-bold uppercase tracking-[0.3em] text-orange-300">Journal Identity</p>
-                  <h3 className="mt-4 text-3xl font-black">ISSN 2716-8077</h3>
-                  <div className="mt-8 grid gap-4">
-                    <InfoRow icon={<PenTool />} label="Editor-in-Chief" value="Pr. BERRABAH HAMZA MADJID" />
-                    <InfoRow icon={<CalendarDays />} label="Edited" value="2020" />
-                    <InfoRow icon={<FileArchive />} label="Frequency" value="Quarterly" />
-                    <InfoRow icon={<Search />} label="Scope" value="Materials • Structures • Civil Engineering" />
-                  </div>
-                </div>
-                <div className="mt-6 rounded-[1.5rem] border border-orange-300/50 bg-orange-50 p-6">
-                  <h4 className="font-black text-orange-700">Current announcement</h4>
-                  <p className="mt-2 leading-7 text-neutral-800">{announcement}</p>
-                </div>
-              </div>
-            </div>
-
-            <Stats />
-            <ScopeSection navigate={navigate} />
-          </section>
-        )}
-
-        {activePage === 'submit' && <SubmitPage handleSubmission={handleSubmission} submission={submission} submissionStatus={submissionStatus} />}
-        {activePage === 'authors' && <AuthorsPage guideText={guideText} templateName={templateName} coverLetterName={coverLetterName} downloadTextFile={downloadTextFile} />}
-        {activePage === 'committee' && <CommitteePage directorText={directorText} />}
-        {activePage === 'issues' && <IssuesPage />}
-        {activePage === 'contact' && <ContactPage />}
-        {activePage === 'admin' && (
-          <AdminPage
-            adminUnlocked={adminUnlocked}
-            adminPassword={adminPassword}
-            setAdminPassword={setAdminPassword}
-            unlockAdmin={unlockAdmin}
-            journalTitle={journalTitle}
-            setJournalTitle={setJournalTitle}
-            announcement={announcement}
-            setAnnouncement={setAnnouncement}
-            guideText={guideText}
-            setGuideText={setGuideText}
-            directorText={directorText}
-            setDirectorText={setDirectorText}
-            templateName={templateName}
-            setTemplateName={setTemplateName}
-            coverLetterName={coverLetterName}
-            setCoverLetterName={setCoverLetterName}
-          />
-        )}
-      </main>
-
-      <footer className="mt-16 border-t border-emerald-900/10 bg-emerald-950 px-4 py-10 text-white sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-orange-300">Pr BERRABAH HAMZA MADJID</p>
-            <h2 className="mt-2 text-2xl font-black">{journalTitle}</h2>
-            <p className="mt-2 text-white/70">ISSN: 2716-8077 • Edited: 2020 • Quarterly publication</p>
-          </div>
-          <a href={`mailto:${editorEmail}`} className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-6 py-3 font-black text-white hover:bg-orange-600">
-            <Mail size={18} /> Contact Editor-in-Chief
-          </a>
-        </div>
-      </footer>
-    </div>
-  )
-}
-
-function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div className="flex gap-4 rounded-2xl bg-white/10 p-4">
-      <div className="text-orange-300">{icon}</div>
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/55">{label}</p>
-        <p className="mt-1 font-bold">{value}</p>
-      </div>
-    </div>
-  )
-}
-
-function Stats() {
-  return (
-    <div className="mx-auto grid max-w-7xl gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
-      {[
-        ['2020', 'Year of first edition'],
-        ['Quarterly', 'Publication frequency'],
-        ['2716-8077', 'ISSN registration'],
-        ['Peer Review', 'Scientific evaluation'],
-      ].map(([value, label]) => (
-        <div key={value} className="rounded-3xl border border-white/80 bg-white/65 p-6 shadow-lg shadow-emerald-900/5">
-          <p className="text-3xl font-black text-orange-600">{value}</p>
-          <p className="mt-2 font-bold text-emerald-950">{label}</p>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function ScopeSection({ navigate }: { navigate: (page: PageKey) => void }) {
-  const scopes = ['Advanced building materials', 'Structural analysis and design', 'Concrete technology and durability', 'Seismic engineering', 'Sustainable construction', 'Numerical modelling']
-  return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-      <div className="rounded-[2rem] bg-white/65 p-6 shadow-xl shadow-emerald-900/5 md:p-10">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="font-black uppercase tracking-[0.25em] text-orange-600">Scientific scope</p>
-            <h3 className="mt-3 text-3xl font-black text-emerald-950">Designed like recognized international scientific journals</h3>
-          </div>
-          <button onClick={() => navigate('issues')} className="rounded-full bg-emerald-950 px-6 py-3 font-black text-orange-300 hover:bg-emerald-800">View all issues</button>
-        </div>
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          {scopes.map((scope) => (
-            <div key={scope} className="rounded-2xl border border-emerald-900/10 bg-[#dff4d8] p-5">
-              <CheckCircle2 className="text-orange-500" />
-              <p className="mt-4 font-black text-emerald-950">{scope}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function SubmitPage({ handleSubmission, submission, submissionStatus }: { handleSubmission: (event: React.FormEvent<HTMLFormElement>) => void; submission: Submission | null; submissionStatus: SubmissionStatus }) {
-  const [selectedFileName, setSelectedFileName] = useState('No file selected yet')
-
-  return (
-    <PageShell eyebrow="Online submission" title="Submit a manuscript" description="Authors can register their identity, manuscript title, abstract and attach the Word/PDF article file. The submit button sends the complete submission to the Editor-in-Chief e-mail address.">
-      <div className="grid gap-8 lg:grid-cols-[1fr_0.72fr]">
-        <form onSubmit={handleSubmission} className="rounded-[2rem] bg-white/75 p-6 shadow-xl shadow-emerald-900/5 md:p-8">
-          <div className="grid gap-5 md:grid-cols-2">
-            <Field label="First name" name="firstName" required />
-            <Field label="Last name" name="lastName" required />
-            <Field label="E-mail" name="email" type="email" required />
-            <Field label="Article title" name="articleTitle" required />
-          </div>
-          <label className="mt-5 block">
-            <span className="font-black text-emerald-950">Abstract</span>
-            <textarea name="abstract" required rows={7} className="mt-2 w-full rounded-2xl border border-emerald-900/10 bg-white px-4 py-3 outline-none ring-orange-400 transition focus:ring-4" placeholder="Write the manuscript abstract here..." />
+))}
+) } function SubmitPage({ handleSubmission, submission, submissionStatus }: { handleSubmission: (event: React.FormEvent) => void; submission: Submission | null; submissionStatus: SubmissionStatus }) { const [selectedFileName, setSelectedFileName] = useState('No file selected yet') return (
+Abstract 
           </label>
           <label className="mt-5 flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-orange-400 bg-orange-50 px-6 py-10 text-center transition hover:bg-orange-100">
             <Upload className="text-orange-600" size={34} />
@@ -602,3 +281,4 @@ function PageShell({ eyebrow, title, description, children }: { eyebrow: string;
 }
 
 export default App
+
