@@ -1,284 +1,512 @@
-import { useMemo, useState } from 'react' import { BookOpen, CalendarDays, CheckCircle2, ChevronRight, Download, Edit3, FileArchive, FileText, Globe2, KeyRound, Lock, Mail, Menu, PenTool, Search, Send, Upload, Users, X, } from 'lucide-react' import './App.css' type PageKey = 'home' | 'submit' | 'authors' | 'committee' | 'issues' | 'contact' | 'admin' type Issue = { volume: string number: string date: string papers: string[] } type Submission = { firstName: string lastName: string email: string title: string abstract: string fileName: string } type SubmissionStatus = { type: 'idle' | 'sending' | 'success' | 'error' message: string } const editorEmail = 'hamzamadjid.berrabah@univ-relizane.dz' const pages: { key: PageKey; label: string }[] = [ { key: 'home', label: 'Home' }, { key: 'submit', label: 'Submit Article' }, { key: 'authors', label: 'Guide for Authors' }, { key: 'committee', label: 'Editorial Committee' }, { key: 'issues', label: 'All Issues' }, { key: 'contact', label: 'Contact' }, ] const issues: Issue[] = [ { volume: 'Volume 5', number: 'Issue 4', date: 'December 2024', papers: ['Advanced cementitious composites for resilient structures', 'Numerical assessment of bridge deck fatigue', 'Thermal behavior of sustainable masonry units'], }, { volume: 'Volume 5', number: 'Issue 3', date: 'September 2024', papers: ['Durability of reinforced concrete in aggressive environments', 'Microstructure and mechanical response of geopolymer binders', 'Seismic strengthening techniques for existing buildings'], }, { volume: 'Volume 5', number: 'Issue 2', date: 'June 2024', papers: ['Recycled aggregates in structural concrete', 'Experimental study of steel beam-column joints', 'Optimization methods in structural health monitoring'], }, { volume: 'Volume 5', number: 'Issue 1', date: 'March 2024', papers: ['Eco-efficient materials for civil engineering', 'Finite element modelling of composite slabs', 'Performance-based design for earthquake engineering'], }, ] const committeeMembers = [ 'Pr. BERRABAH HAMZA MADJID — Editor-in-Chief', 'Publication Director — Journal of Materials and Structures', 'Associate Editors — Materials Science, Civil Engineering, Structural Mechanics', 'International Editorial Board — University researchers and peer reviewers', 'Technical Secretariat — Manuscript screening, layout and archive management', ] function App() { const [activePage, setActivePage] = useState('home') const [menuOpen, setMenuOpen] = useState(false) const [adminUnlocked, setAdminUnlocked] = useState(false) const [adminPassword, setAdminPassword] = useState('') const [journalTitle, setJournalTitle] = useState('Journal of Materials and Structures') const [announcement, setAnnouncement] = useState('Call for papers: manuscripts are welcomed from university researchers in materials, civil engineering, structural analysis and innovative construction systems.') const [directorText, setDirectorText] = useState('The Publication Director and Editorial Committee ensure academic integrity, double-blind peer review, ethical publishing practices and international visibility for all accepted papers.') const [guideText, setGuideText] = useState('Authors must submit original manuscripts written in clear scientific English, following the journal template, with references, figures and tables formatted according to the provided instructions.') const [templateName, setTemplateName] = useState('JMS_Template.docx') const [coverLetterName, setCoverLetterName] = useState('JMS_Cover_Letter.docx') const [submission, setSubmission] = useState(null) const [submissionStatus, setSubmissionStatus] = useState({ type: 'idle', message: '' }) const encodedSlug = useMemo(() => encodeURIComponent('Pr BERRABAH HAMZA MADJID Journal of Materials and Structures'), []) const navigate = (page: PageKey) => { setActivePage(page) setMenuOpen(false) window.scrollTo({ top: 0, behavior: 'smooth' }) } const handleSubmission = async (event: React.FormEvent) => { event.preventDefault() const form = event.currentTarget const data = new FormData(form) const file = data.get('attachment') as File | null const nextSubmission = { firstName: String(data.get('firstName') || ''), lastName: String(data.get('lastName') || ''), email: String(data.get('email') || ''), title: String(data.get('articleTitle') || ''), abstract: String(data.get('abstract') || ''), fileName: file?.name || 'No file selected', } setSubmission(nextSubmission) setSubmissionStatus({ type: 'sending', message: 'Sending the manuscript and attachment directly to the Editor-in-Chief e-mail...' }) try { const response = await fetch('/api/submit-manuscript', { method: 'POST', body: data, }) const result = await response.json() if (!response.ok) { throw new Error(result.message || 'Submission failed') } setSubmissionStatus({ type: 'success', message: 'Manuscript submitted successfully. The article file was transmitted as an e-mail attachment.' }) form.reset() } catch (error) { setSubmissionStatus({ type: 'error', message: error instanceof Error ? error.message : 'The manuscript could not be transmitted. Please try again.', }) } } const downloadTextFile = (fileName: string, content: string) => { const blob = new Blob([content], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document;charset=utf-8' }) const url = URL.createObjectURL(blob) const link = document.createElement('a') link.href = url link.download = fileName document.body.appendChild(link) link.click() link.remove() URL.revokeObjectURL(url) } const unlockAdmin = (event: React.FormEvent) => { event.preventDefault() if (adminPassword.trim().length >= 6) { setAdminUnlocked(true) } } return (
-navigate('home')} className="group flex items-center gap-3 text-left" aria-label="Go to homepage">
-Pr BERRABAH HAMZA MADJID
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal of Materials and Structures (JMS)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e6f7e6 0%, #fff5e6 100%);
+            color: #1a3a2a;
+            line-height: 1.6;
+        }
+        .header {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(26,58,42,0.1);
+            padding: 1rem 2rem;
+        }
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .logo h1 { font-size: 1.2rem; color: #2d6a4f; }
+        .logo p { font-size: 1.1rem; font-weight: bold; color: #1a3a2a; }
+        .nav { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .nav button {
+            background: none;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #1a3a2a;
+        }
+        .nav button.active { background: #f97316; color: white; }
+        .nav button:hover:not(.active) { background: rgba(255,255,255,0.7); color: #f97316; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .hero { text-align: center; padding: 3rem 1rem; }
+        .hero h1 { font-size: 2.5rem; color: #1a3a2a; margin-bottom: 1rem; }
+        .hero p { font-size: 1.2rem; color: #4a6a5a; max-width: 600px; margin: 0 auto 2rem; }
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-weight: bold;
+            margin: 0.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-primary { background: #f97316; color: white; box-shadow: 0 5px 15px rgba(249,115,22,0.3); }
+        .btn-primary:hover { transform: translateY(-2px); background: #ea580c; }
+        .btn-secondary { background: transparent; color: #1a3a2a; border: 2px solid #1a3a2a; }
+        .btn-secondary:hover { background: #1a3a2a; color: #f97316; }
+        .btn-admin { background: #1a3a2a; color: #f97316; border: 2px solid #f97316; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 3rem 0;
+        }
+        .stat-card { background: white; padding: 1.5rem; text-align: center; border-radius: 20px; }
+        .stat-card .number { font-size: 1.8rem; font-weight: bold; color: #f97316; }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin: 2rem 0; }
+        .card { background: rgba(255,255,255,0.7); padding: 1.5rem; border-radius: 30px; }
+        .card h3 { color: #1a3a2a; margin-bottom: 1rem; }
+        .scopes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 1rem; }
+        .scope-item { background: #fff0e6; padding: 0.5rem; border-radius: 10px; font-size: 0.9rem; text-align: center; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 0.5rem; color: #1a3a2a; }
+        .form-group input, .form-group textarea { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 15px; font-family: inherit; }
+        .file-zone { border: 2px dashed #f97316; background: #fff5e6; padding: 2rem; text-align: center; border-radius: 20px; cursor: pointer; margin: 1rem 0; }
+        .footer { background: #1a3a2a; color: white; text-align: center; padding: 2rem; margin-top: 3rem; }
+        .page-section { display: none; }
+        .page-section.active { display: block; }
+        .issue { background: rgba(255,255,255,0.7); padding: 1.5rem; border-radius: 20px; margin-bottom: 1rem; }
+        .issue h4 { color: #f97316; }
+        .admin-panel { background: #1a3a2a; color: white; padding: 2rem; border-radius: 30px; margin-top: 1rem; }
+        .admin-panel input, .admin-panel textarea { width: 100%; padding: 0.75rem; border-radius: 15px; border: none; margin-top: 0.5rem; margin-bottom: 1rem; }
+        .copy-btn { background: #1a3a2a; color: #f97316; border: 1px solid #f97316; padding: 0.5rem 1rem; border-radius: 10px; cursor: pointer; margin-top: 0.5rem; }
+        .copy-btn:hover { background: #f97316; color: white; }
+        @media (max-width: 768px) {
+            .header-content { flex-direction: column; text-align: center; }
+            .hero h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
 
-{journalTitle}
-{pages.map((page) => ( navigate(page.key)} className={`rounded-full px-4 py-2 text-sm font-bold transition ${activePage === page.key ? 'bg-orange-500 text-white shadow-md' : 'text-emerald-950 hover:bg-white/70 hover:text-orange-600'}`} > {page.label} ))} navigate('admin')} className="ml-2 rounded-full bg-emerald-950 px-4 py-2 text-sm font-bold text-orange-300 transition hover:bg-emerald-800"> Admin Access
-setMenuOpen(!menuOpen)} className="rounded-xl bg-white/70 p-3 text-emerald-950 shadow-sm lg:hidden" aria-label="Open menu"> {menuOpen ? :
-}
-{menuOpen && (
-{[...pages, { key: 'admin' as PageKey, label: 'Admin Access' }].map((page) => ( navigate(page.key)} className="rounded-xl bg-white/70 px-4 py-3 text-left font-bold text-emerald-950"> {page.label} ))}
-)}
-{activePage === 'home' && (
-National scientific journal for university researchers
-A professional platform for materials science and structural engineering research.
-{journalTitle} is a quarterly national scientific review edited since 2020 under the direction of Editor-in-Chief Pr. BERRABAH HAMZA MADJID. The journal welcomes rigorous, original and peer-reviewed contributions in materials, structures and civil engineering.
+<div class="header">
+    <div class="header-content">
+        <div class="logo">
+            <p id="director-name-display">Pr. BERRABAH HAMZA MADJID</p>
+            <h1 id="journal-title-display">Journal of Materials and Structures</h1>
+        </div>
+        <div class="nav">
+            <button class="nav-btn active" data-page="home">Home</button>
+            <button class="nav-btn" data-page="submit">Submit Article</button>
+            <button class="nav-btn" data-page="authors">Guide for Authors</button>
+            <button class="nav-btn" data-page="committee">Editorial Committee</button>
+            <button class="nav-btn" data-page="issues">All Issues</button>
+            <button class="nav-btn" data-page="contact">Contact</button>
+            <button class="nav-btn" data-page="admin">Admin 🔒</button>
+        </div>
+    </div>
+</div>
 
-navigate('submit')} className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-7 py-4 font-black text-white shadow-xl shadow-orange-500/25 transition hover:-translate-y-1 hover:bg-orange-600"> Submit your article navigate('authors')} className="inline-flex items-center gap-2 rounded-full border-2 border-emerald-950 px-7 py-4 font-black text-emerald-950 transition hover:bg-emerald-950 hover:text-orange-300"> Author guidelines
-Journal Identity
-
-ISSN 2716-8077
-} label="Editor-in-Chief" value="Pr. BERRABAH HAMZA MADJID" /> } label="Edited" value="2020" /> } label="Frequency" value="Quarterly" /> } label="Scope" value="Materials • Structures • Civil Engineering" />
-Current announcement
-{announcement}
-
-)} {activePage === 'submit' && } {activePage === 'authors' && } {activePage === 'committee' && } {activePage === 'issues' && } {activePage === 'contact' && } {activePage === 'admin' && ( )}
-Pr BERRABAH HAMZA MADJID
-
-{journalTitle}
-ISSN: 2716-8077 • Edited: 2020 • Quarterly publication
-
-Contact Editor-in-Chief
-) } function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) { return (
-{icon}
-{label}
-
-{value}
-
-) } function Stats() { return (
-{[ ['2020', 'Year of first edition'], ['Quarterly', 'Publication frequency'], ['2716-8077', 'ISSN registration'], ['Peer Review', 'Scientific evaluation'], ].map(([value, label]) => (
-{value}
-
-{label}
-
-))}
-) } function ScopeSection({ navigate }: { navigate: (page: PageKey) => void }) { const scopes = ['Advanced building materials', 'Structural analysis and design', 'Concrete technology and durability', 'Seismic engineering', 'Sustainable construction', 'Numerical modelling'] return (
-Scientific scope
-
-Designed like recognized international scientific journals
-navigate('issues')} className="rounded-full bg-emerald-950 px-6 py-3 font-black text-orange-300 hover:bg-emerald-800">View all issues
-{scopes.map((scope) => (
-{scope}
-
-))}
-) } function SubmitPage({ handleSubmission, submission, submissionStatus }: { handleSubmission: (event: React.FormEvent) => void; submission: Submission | null; submissionStatus: SubmissionStatus }) { const [selectedFileName, setSelectedFileName] = useState('No file selected yet') return (
-Abstract 
-          </label>
-          <label className="mt-5 flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-orange-400 bg-orange-50 px-6 py-10 text-center transition hover:bg-orange-100">
-            <Upload className="text-orange-600" size={34} />
-            <span className="mt-3 font-black text-emerald-950">Upload article file</span>
-            <span className="mt-1 text-sm text-neutral-600">Accepted formats: Word or PDF</span>
-            <span className="mt-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-orange-700">{selectedFileName}</span>
-            <input name="attachment" type="file" accept=".doc,.docx,.pdf" required onChange={(event) => setSelectedFileName(event.target.files?.[0]?.name || 'No file selected yet')} className="mt-5 max-w-full rounded-xl bg-white p-3 text-sm" />
-          </label>
-          <button type="submit" disabled={submissionStatus.type === 'sending'} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-orange-500 px-8 py-4 text-lg font-black text-white shadow-xl shadow-orange-500/25 hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300">
-            {submissionStatus.type === 'sending' ? 'Sending manuscript...' : 'Submit manuscript'} <Send size={20} />
-          </button>
-          {submissionStatus.type !== 'idle' && (
-            <div className={`mt-5 rounded-2xl p-4 font-bold ${submissionStatus.type === 'success' ? 'bg-emerald-100 text-emerald-900' : submissionStatus.type === 'error' ? 'bg-red-100 text-red-900' : 'bg-orange-100 text-orange-900'}`}>
-              {submissionStatus.message}
+<div class="container">
+    <!-- PAGE HOME -->
+    <div id="home" class="page-section active">
+        <div class="hero">
+            <h1 id="home-title">Journal of Materials and Structures (JMS)</h1>
+            <p id="home-subtitle">A national, peer-reviewed, open-access journal dedicated to materials science and structural engineering.</p>
+            <button class="btn btn-primary" onclick="navigateTo('submit')">Submit your article</button>
+            <button class="btn btn-secondary" onclick="navigateTo('authors')">Author guidelines</button>
+        </div>
+        <div class="stats">
+            <div class="stat-card"><div class="number">2020</div><div>First edition</div></div>
+            <div class="stat-card"><div class="number">Quarterly</div><div>Frequency</div></div>
+            <div class="stat-card"><div class="number">2716-8077</div><div>ISSN</div></div>
+            <div class="stat-card"><div class="number">Double-blind</div><div>Peer review</div></div>
+        </div>
+        <div class="grid-2">
+            <div class="card" id="about-card">
+                <h3>📖 About the Journal</h3>
+                <p id="about-text"><strong>The Journal of Materials and Structures (JMS)</strong> is a national, peer-reviewed, open-access journal dedicated to advancing knowledge in materials science and structural engineering. Published since <strong>2020</strong>, JMS offers a platform for researchers, engineers, and scientists to share original research, review articles, and technical notes. All submissions undergo a rigorous <strong>double-blind peer review</strong> process to ensure the highest scientific quality and integrity.</p>
             </div>
-          )}
-        </form>
-
-        <aside className="rounded-[2rem] bg-emerald-950 p-7 text-white shadow-2xl shadow-emerald-900/15">
-          <h3 className="text-2xl font-black text-orange-300">Direct delivery to Gmail</h3>
-          <p className="mt-4 leading-7 text-white/80">This form now sends the complete manuscript submission through the website backend to <strong>{editorEmail}</strong>. The attached Word/PDF article is included in the e-mail message when the author clicks Submit manuscript.</p>
-          <p className="mt-4 rounded-2xl bg-orange-500/15 p-4 text-sm leading-6 text-orange-100">The system is prepared for automatic attachment delivery through the server mail function. Maximum attachment size: 25 MB.</p>
-          {submission && (
-            <div className="mt-6 rounded-2xl bg-white/10 p-5">
-              <p className="font-black text-orange-300">Last prepared submission</p>
-              <p className="mt-2 text-sm text-white/75">{submission.firstName} {submission.lastName}</p>
-              <p className="text-sm text-white/75">{submission.title}</p>
-              <p className="text-sm text-white/75">File: {submission.fileName}</p>
+            <div class="card" id="call-card">
+                <h3>📢 Call for Papers</h3>
+                <p id="call-text">The journal welcomes contributions in: advanced materials, composite materials, nanomaterials, structural analysis, finite element modeling, construction materials, smart materials, and sustainable engineering solutions.</p>
+                <button class="btn btn-primary" style="margin-top: 1rem;" onclick="navigateTo('submit')">Submit now →</button>
             </div>
-          )}
-        </aside>
-      </div>
-    </PageShell>
-  )
-}
-
-function Field({ label, name, type = 'text', required = false }: { label: string; name: string; type?: string; required?: boolean }) {
-  return (
-    <label className="block">
-      <span className="font-black text-emerald-950">{label}</span>
-      <input name={name} type={type} required={required} className="mt-2 w-full rounded-2xl border border-emerald-900/10 bg-white px-4 py-3 outline-none ring-orange-400 transition focus:ring-4" />
-    </label>
-  )
-}
-
-function AuthorsPage({ guideText, templateName, coverLetterName, downloadTextFile }: { guideText: string; templateName: string; coverLetterName: string; downloadTextFile: (fileName: string, content: string) => void }) {
-  return (
-    <PageShell eyebrow="Instructions" title="Guide for Authors" description="Clear rules for preparing, formatting and submitting a scientific manuscript to the journal.">
-      <div className="grid gap-8 lg:grid-cols-[0.75fr_1fr]">
-        <div className="rounded-[2rem] bg-white/75 p-7 shadow-xl shadow-emerald-900/5">
-          <h3 className="text-2xl font-black text-emerald-950">Download author files</h3>
-          <p className="mt-3 leading-7 text-neutral-700">Use these buttons to download the manuscript template and cover letter model. The file names can be edited in the admin area.</p>
-          <div className="mt-6 grid gap-4">
-            <button onClick={() => downloadTextFile(templateName, 'Journal of Materials and Structures manuscript template\n\nTitle:\nAuthors:\nAbstract:\nKeywords:\n1. Introduction\n2. Materials and Methods\n3. Results and Discussion\n4. Conclusion\nReferences\n')} className="inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 px-6 py-4 font-black text-white hover:bg-orange-600"><Download size={20} /> Download template</button>
-            <button onClick={() => downloadTextFile(coverLetterName, 'Cover letter for Journal of Materials and Structures\n\nDear Editor-in-Chief,\nWe submit the manuscript entitled: ...\nThe manuscript is original and not under consideration elsewhere.\nCorresponding author signature.\n')} className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-950 px-6 py-4 font-black text-orange-300 hover:bg-emerald-800"><Download size={20} /> Download cover letter</button>
-          </div>
         </div>
-        <div className="rounded-[2rem] bg-white/75 p-7 shadow-xl shadow-emerald-900/5">
-          <h3 className="text-2xl font-black text-emerald-950">Manuscript preparation</h3>
-          <p className="mt-4 leading-8 text-neutral-800">{guideText}</p>
-          <ul className="mt-6 grid gap-3">
-            {['The manuscript must be original and unpublished.', 'The abstract should clearly state objectives, methods, results and conclusions.', 'Figures and tables must be numbered and cited in the text.', 'References must be complete and consistent.', 'Ethics, plagiarism and authorship responsibility are required.'].map((item) => (
-              <li key={item} className="flex gap-3 rounded-2xl bg-[#dff4d8] p-4 font-semibold"><CheckCircle2 className="shrink-0 text-orange-500" /> {item}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </PageShell>
-  )
-}
-
-function CommitteePage({ directorText }: { directorText: string }) {
-  return (
-    <PageShell eyebrow="Governance" title="Publication Director and Editorial Committee" description="A professional editorial structure dedicated to scientific quality and transparent peer review.">
-      <div className="grid gap-8 lg:grid-cols-[1fr_0.9fr]">
-        <div className="rounded-[2rem] bg-white/75 p-7 shadow-xl shadow-emerald-900/5">
-          <h3 className="text-2xl font-black text-emerald-950">Editorial mission</h3>
-          <p className="mt-4 leading-8 text-neutral-800">{directorText}</p>
-          <div className="mt-7 grid gap-4 md:grid-cols-2">
-            {['Initial screening', 'Double-blind review', 'Revision management', 'Publication decision'].map((step) => <div key={step} className="rounded-2xl bg-orange-50 p-5 font-black text-orange-700">{step}</div>)}
-          </div>
-        </div>
-        <div className="rounded-[2rem] bg-emerald-950 p-7 text-white shadow-2xl shadow-emerald-900/15">
-          <h3 className="text-2xl font-black text-orange-300">Committee structure</h3>
-          <div className="mt-6 grid gap-3">
-            {committeeMembers.map((member) => <div key={member} className="rounded-2xl bg-white/10 p-4 font-semibold text-white/85">{member}</div>)}
-          </div>
-        </div>
-      </div>
-    </PageShell>
-  )
-}
-
-function IssuesPage() {
-  return (
-    <PageShell eyebrow="Archive" title="All Issues" description="Browse the public archive of quarterly issues and published scientific articles.">
-      <div className="grid gap-6">
-        {issues.map((issue) => (
-          <article key={`${issue.volume}-${issue.number}`} className="rounded-[2rem] bg-white/75 p-7 shadow-xl shadow-emerald-900/5">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="font-black uppercase tracking-[0.25em] text-orange-600">{issue.date}</p>
-                <h3 className="mt-2 text-2xl font-black text-emerald-950">{issue.volume} — {issue.number}</h3>
-              </div>
-              <button className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-950 px-5 py-3 font-black text-orange-300 hover:bg-emerald-800"><FileText size={18} /> View issue</button>
+        <div class="card">
+            <h3>🔬 Scientific Scope</h3>
+            <div class="scopes" id="scopes-list">
+                <div class="scope-item">Advanced building materials</div>
+                <div class="scope-item">Structural analysis & design</div>
+                <div class="scope-item">Concrete technology & durability</div>
+                <div class="scope-item">Seismic engineering</div>
+                <div class="scope-item">Sustainable construction</div>
+                <div class="scope-item">Numerical modelling</div>
             </div>
-            <div className="mt-6 grid gap-3">
-              {issue.papers.map((paper) => <p key={paper} className="rounded-2xl border border-emerald-900/10 bg-[#dff4d8] p-4 font-semibold text-neutral-800">{paper}</p>)}
+        </div>
+    </div>
+
+    <!-- PAGE SUBMIT (CORRIGÉE) -->
+    <div id="submit" class="page-section">
+        <h2 style="color:#f97316; margin-bottom:0.5rem;">✏️ Submit your manuscript</h2>
+        <p style="margin-bottom: 2rem;">Remplissez le formulaire ci-dessous, copiez les informations, puis envoyez l'e-mail avec votre fichier attaché.</p>
+        <div class="grid-2">
+            <div class="card">
+                <form id="submissionForm">
+                    <div class="form-group">
+                        <label>First name *</label>
+                        <input type="text" id="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last name *</label>
+                        <input type="text" id="lastName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Article title *</label>
+                        <input type="text" id="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Abstract *</label>
+                        <textarea id="abstract" rows="5" required></textarea>
+                    </div>
+                    <div class="file-zone" onclick="document.getElementById('fileInput').click()">
+                        📎 Click to select your article file (Word or PDF)
+                        <input type="file" id="fileInput" accept=".doc,.docx,.pdf" style="display:none">
+                        <p id="fileNameDisplay" style="font-size:0.8rem; margin-top:0.5rem;">No file selected</p>
+                    </div>
+                    <button type="button" class="btn btn-secondary" style="width:100%; margin-bottom:1rem;" onclick="copyToClipboard()">📋 Copier les informations</button>
+                    <a href="https://mail.google.com/mail/?view=cm&fs=1&to=hamzamadjid.berrabah@univ-relizane.dz" target="_blank" class="btn btn-primary" style="display:block; text-align:center; text-decoration:none;">📧 Ouvrir Gmail et coller (Ctrl+V)</a>
+                </form>
+                <div id="formMessage" style="margin-top: 1rem; display:none;"></div>
             </div>
-          </article>
-        ))}
-      </div>
-    </PageShell>
-  )
-}
-
-function ContactPage() {
-  return (
-    <PageShell eyebrow="Contact" title="Contact the Editor-in-Chief" description="Researchers and authors can contact the journal directly by e-mail.">
-      <div className="rounded-[2rem] bg-white/75 p-8 shadow-xl shadow-emerald-900/5">
-        <div className="grid gap-8 lg:grid-cols-[0.8fr_1fr]">
-          <div className="rounded-[1.6rem] bg-emerald-950 p-7 text-white">
-            <Users className="text-orange-300" size={40} />
-            <h3 className="mt-5 text-2xl font-black">Pr. BERRABAH HAMZA MADJID</h3>
-            <p className="mt-2 text-white/70">Editor-in-Chief, Journal of Materials and Structures</p>
-          </div>
-          <div className="flex flex-col justify-center">
-            <p className="text-lg leading-8 text-neutral-800">Click the e-mail address below to open Gmail or your default mail application and write directly to the Editor-in-Chief.</p>
-            <a href={`https://mail.google.com/mail/?view=cm&fs=1&to=${editorEmail}`} target="_blank" rel="noreferrer" className="mt-6 inline-flex w-fit items-center gap-3 rounded-full bg-orange-500 px-7 py-4 text-lg font-black text-white shadow-xl shadow-orange-500/25 hover:bg-orange-600">
-              <Mail size={22} /> {editorEmail}
-            </a>
-          </div>
+            <div class="card">
+                <h3>📧 Comment soumettre ?</h3>
+                <p><strong>Étape 1 :</strong> Remplissez le formulaire ci-contre.</p>
+                <p><strong>Étape 2 :</strong> Cliquez sur <strong>"Copier les informations"</strong>.</p>
+                <p><strong>Étape 3 :</strong> Cliquez sur <strong>"Ouvrir Gmail"</strong>.</p>
+                <p><strong>Étape 4 :</strong> Collez les informations (Ctrl+V) dans l'e-mail.</p>
+                <p><strong>Étape 5 :</strong> Joignez votre fichier article.</p>
+                <p><strong>Étape 6 :</strong> Envoyez à :</p>
+                <p style="background:#1a3a2a; color:#f97316; padding:0.75rem; border-radius:15px; text-align:center;">hamzamadjid.berrabah@univ-relizane.dz</p>
+            </div>
         </div>
-      </div>
-    </PageShell>
-  )
-}
+    </div>
 
-function AdminPage(props: {
-  adminUnlocked: boolean
-  adminPassword: string
-  setAdminPassword: (value: string) => void
-  unlockAdmin: (event: React.FormEvent<HTMLFormElement>) => void
-  journalTitle: string
-  setJournalTitle: (value: string) => void
-  announcement: string
-  setAnnouncement: (value: string) => void
-  guideText: string
-  setGuideText: (value: string) => void
-  directorText: string
-  setDirectorText: (value: string) => void
-  templateName: string
-  setTemplateName: (value: string) => void
-  coverLetterName: string
-  setCoverLetterName: (value: string) => void
-}) {
-  if (!props.adminUnlocked) {
-    return (
-      <PageShell eyebrow="Private editing" title="Password protected administration" description="Create your own private password to unlock editing tools in this browser session. The password is not displayed on the public pages.">
-        <form onSubmit={props.unlockAdmin} className="mx-auto max-w-xl rounded-[2rem] bg-white/75 p-8 shadow-xl shadow-emerald-900/5">
-          <Lock className="text-orange-500" size={42} />
-          <label className="mt-6 block">
-            <span className="font-black text-emerald-950">Create / enter private password</span>
-            <input value={props.adminPassword} onChange={(event) => props.setAdminPassword(event.target.value)} type="password" minLength={6} required className="mt-2 w-full rounded-2xl border border-emerald-900/10 bg-white px-4 py-3 outline-none ring-orange-400 transition focus:ring-4" placeholder="Minimum 6 characters" />
-          </label>
-          <button className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-950 px-7 py-4 font-black text-orange-300 hover:bg-emerald-800"><KeyRound size={19} /> Unlock editing area</button>
-        </form>
-      </PageShell>
-    )
-  }
-
-  return (
-    <PageShell eyebrow="Administration" title="Edit website content" description="Modify text zones, titles, download file names and image/document inputs. Changes are visible immediately in this session.">
-      <div className="grid gap-6">
-        <AdminInput label="Journal title" value={props.journalTitle} onChange={props.setJournalTitle} />
-        <AdminTextarea label="Homepage announcement text" value={props.announcement} onChange={props.setAnnouncement} />
-        <AdminTextarea label="Guide for Authors text zone" value={props.guideText} onChange={props.setGuideText} />
-        <AdminTextarea label="Publication Director and Editorial Committee text zone" value={props.directorText} onChange={props.setDirectorText} />
-        <div className="grid gap-6 md:grid-cols-2">
-          <AdminInput label="Template Word file name" value={props.templateName} onChange={props.setTemplateName} />
-          <AdminInput label="Cover letter Word file name" value={props.coverLetterName} onChange={props.setCoverLetterName} />
+    <!-- PAGE AUTHORS -->
+    <div id="authors" class="page-section">
+        <h2 style="color:#f97316; margin-bottom:0.5rem;">📚 Guide for Authors</h2>
+        <p style="margin-bottom: 2rem;">Clear rules for preparing, formatting and submitting a scientific manuscript.</p>
+        <div class="grid-2">
+            <div class="card">
+                <h3>📥 Download author files</h3>
+                <button class="btn btn-primary" style="width:100%; margin-bottom:1rem;" onclick="downloadTemplate()">Download template (Word)</button>
+                <button class="btn btn-secondary" style="width:100%;" onclick="downloadCoverLetter()">Download cover letter (Word)</button>
+            </div>
+            <div class="card">
+                <h3>📝 Manuscript preparation</h3>
+                <ul style="margin-left: 1.5rem;">
+                    <li>The manuscript must be original and unpublished</li>
+                    <li>The abstract should clearly state objectives, methods, results and conclusions</li>
+                    <li>Figures and tables must be numbered and cited in the text</li>
+                    <li>References must be complete and consistent</li>
+                    <li>Ethics, plagiarism and authorship responsibility are required</li>
+                </ul>
+            </div>
         </div>
-        <div className="rounded-[2rem] bg-white/75 p-7 shadow-xl shadow-emerald-900/5">
-          <h3 className="text-xl font-black text-emerald-950">Insert photos and Word documents</h3>
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
-            <label className="rounded-2xl border-2 border-dashed border-orange-400 bg-orange-50 p-5 font-bold text-orange-700">Photo input<input type="file" accept="image/*" className="mt-3 w-full text-sm" /></label>
-            <label className="rounded-2xl border-2 border-dashed border-orange-400 bg-orange-50 p-5 font-bold text-orange-700">Template Word input<input type="file" accept=".doc,.docx" className="mt-3 w-full text-sm" /></label>
-            <label className="rounded-2xl border-2 border-dashed border-orange-400 bg-orange-50 p-5 font-bold text-orange-700">Cover letter Word input<input type="file" accept=".doc,.docx" className="mt-3 w-full text-sm" /></label>
-          </div>
-          <p className="mt-4 text-sm leading-6 text-neutral-600">For permanent online storage of uploaded documents and photos, connect this interface later to a secure backend or CMS. This version provides public website editing controls in the browser.</p>
+    </div>
+
+    <!-- PAGE COMMITTEE -->
+    <div id="committee" class="page-section">
+        <h2 style="color:#f97316; margin-bottom:0.5rem;">👥 Publication Director and Editorial Committee</h2>
+        <p style="margin-bottom: 2rem;">A professional editorial structure dedicated to scientific quality and transparent peer review.</p>
+        <div class="card">
+            <p id="committee-text">The Publication Director and Editorial Committee ensure academic integrity, double-blind peer review, ethical publishing practices and international visibility for all accepted papers.</p>
+            <div style="margin-top: 2rem;" id="committee-list">
+                <div style="background:#1a3a2a; color:white; padding:1rem; border-radius:15px; margin-bottom:0.5rem;">Pr. BERRABAH HAMZA MADJID — Editor-in-Chief</div>
+                <div style="background:#1a3a2a; color:white; padding:1rem; border-radius:15px; margin-bottom:0.5rem;">Publication Director — Journal of Materials and Structures</div>
+                <div style="background:#1a3a2a; color:white; padding:1rem; border-radius:15px; margin-bottom:0.5rem;">Associate Editors — Materials Science, Civil Engineering, Structural Mechanics</div>
+                <div style="background:#1a3a2a; color:white; padding:1rem; border-radius:15px; margin-bottom:0.5rem;">International Editorial Board — University researchers and peer reviewers</div>
+                <div style="background:#1a3a2a; color:white; padding:1rem; border-radius:15px;">Technical Secretariat — Manuscript screening, layout and archive management</div>
+            </div>
         </div>
-      </div>
-    </PageShell>
-  )
-}
+    </div>
 
-function AdminInput({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  return (
-    <label className="block rounded-[2rem] bg-white/75 p-6 shadow-xl shadow-emerald-900/5">
-      <span className="font-black text-emerald-950">{label}</span>
-      <input value={value} onChange={(event) => onChange(event.target.value)} className="mt-2 w-full rounded-2xl border border-emerald-900/10 bg-white px-4 py-3 outline-none ring-orange-400 transition focus:ring-4" />
-    </label>
-  )
-}
+    <!-- PAGE ISSUES -->
+    <div id="issues" class="page-section">
+        <h2 style="color:#f97316; margin-bottom:0.5rem;">📑 All Issues</h2>
+        <p style="margin-bottom: 2rem;">Browse the public archive of quarterly issues and published scientific articles.</p>
+        <div id="issues-list">
+            <div class="issue"><h4>December 2024 — Volume 5, Issue 4</h4><ul><li>Advanced cementitious composites for resilient structures</li><li>Numerical assessment of bridge deck fatigue</li><li>Thermal behavior of sustainable masonry units</li></ul></div>
+            <div class="issue"><h4>September 2024 — Volume 5, Issue 3</h4><ul><li>Durability of reinforced concrete in aggressive environments</li><li>Microstructure and mechanical response of geopolymer binders</li><li>Seismic strengthening techniques for existing buildings</li></ul></div>
+            <div class="issue"><h4>June 2024 — Volume 5, Issue 2</h4><ul><li>Recycled aggregates in structural concrete</li><li>Experimental study of steel beam-column joints</li><li>Optimization methods in structural health monitoring</li></ul></div>
+            <div class="issue"><h4>March 2024 — Volume 5, Issue 1</h4><ul><li>Eco-efficient materials for civil engineering</li><li>Finite element modelling of composite slabs</li><li>Performance-based design for earthquake engineering</li></ul></div>
+        </div>
+    </div>
 
-function AdminTextarea({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  return (
-    <label className="block rounded-[2rem] bg-white/75 p-6 shadow-xl shadow-emerald-900/5">
-      <span className="font-black text-emerald-950">{label}</span>
-      <textarea value={value} onChange={(event) => onChange(event.target.value)} rows={5} className="mt-2 w-full rounded-2xl border border-emerald-900/10 bg-white px-4 py-3 outline-none ring-orange-400 transition focus:ring-4" />
-    </label>
-  )
-}
+    <!-- PAGE CONTACT -->
+    <div id="contact" class="page-section">
+        <h2 style="color:#f97316; margin-bottom:0.5rem;">📧 Contact the Editor-in-Chief</h2>
+        <p style="margin-bottom: 2rem;">Researchers and authors can contact the journal directly by e-mail.</p>
+        <div class="card" style="text-align:center;">
+            <div style="font-size:4rem;">👨‍🏫</div>
+            <h3 id="contact-name">Pr. BERRABAH HAMZA MADJID</h3>
+            <p>Editor-in-Chief, Journal of Materials and Structures</p>
+            <a href="mailto:hamzamadjid.berrabah@univ-relizane.dz" class="btn btn-primary" style="display:inline-block; margin-top:1rem;">✉️ hamzamadjid.berrabah@univ-relizane.dz</a>
+        </div>
+    </div>
 
-function PageShell({ eyebrow, title, description, children }: { eyebrow: string; title: string; description: string; children: React.ReactNode }) {
-  return (
-    <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-      <div className="mb-10">
-        <p className="font-black uppercase tracking-[0.25em] text-orange-600">{eyebrow}</p>
-        <h2 className="mt-3 max-w-4xl text-4xl font-black tracking-tight text-emerald-950 sm:text-5xl">{title}</h2>
-        <p className="mt-4 max-w-3xl text-lg leading-8 text-neutral-800">{description}</p>
-      </div>
-      {children}
-    </section>
-  )
-}
+    <!-- PAGE ADMIN (NOUVELLE) -->
+    <div id="admin" class="page-section">
+        <h2 style="color:#f97316; margin-bottom:0.5rem;">🔐 Admin Panel</h2>
+        <p style="margin-bottom: 2rem;">Gérez le contenu de votre site. Créez votre mot de passe pour modifier les textes.</p>
+        
+        <div id="adminLocked">
+            <div class="card">
+                <h3>Créer / Entrer votre mot de passe admin</h3>
+                <input type="password" id="adminPassword" placeholder="Minimum 6 caractères" style="width:100%; padding:0.75rem; border-radius:15px; margin:1rem 0;">
+                <button class="btn btn-primary" onclick="unlockAdmin()">Déverrouiller l'édition</button>
+            </div>
+        </div>
+        
+        <div id="adminUnlocked" style="display:none;">
+            <div class="admin-panel">
+                <h3 style="color:#f97316;">✏️ Éditeur de contenu</h3>
+                
+                <label>Titre du journal :</label>
+                <input type="text" id="editJournalTitle" placeholder="Journal of Materials and Structures">
+                
+                <label>Nom du directeur :</label>
+                <input type="text" id="editDirectorName" placeholder="Pr. BERRABAH HAMZA MADJID">
+                
+                <label>Texte "About" (page d'accueil) :</label>
+                <textarea id="editAboutText" rows="5"></textarea>
+                
+                <label>Texte "Call for Papers" :</label>
+                <textarea id="editCallText" rows="3"></textarea>
+                
+                <label>Texte du comité éditorial :</label>
+                <textarea id="editCommitteeText" rows="3"></textarea>
+                
+                <button class="btn btn-primary" onclick="saveAdminChanges()">💾 Sauvegarder toutes les modifications</button>
+                <button class="btn btn-secondary" onclick="logoutAdmin()">🚪 Fermer l'admin</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-export default App
+<div class="footer">
+    <p>© 2024 <span id="footer-title">Journal of Materials and Structures</span> — ISSN: 2716-8077</p>
+    <p style="margin-top:0.5rem; font-size:0.9rem;">Edited by <span id="footer-director">Pr. BERRABAH HAMZA MADJID</span> • LMIER – Laboratoire des Matériaux Innovants</p>
+</div>
 
+<script>
+    const editorEmail = 'hamzamadjid.berrabah@univ-relizane.dz';
+    let adminUnlocked = false;
+    let adminPasswordHash = '';
+
+    // Navigation
+    function navigateTo(page) {
+        document.querySelectorAll('.page-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        document.getElementById(page).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if(btn.getAttribute('data-page') === page) {
+                btn.classList.add('active');
+            }
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            navigateTo(btn.getAttribute('data-page'));
+        });
+    });
+
+    // Copier les informations du formulaire
+    function copyToClipboard() {
+        const firstName = document.getElementById('firstName').value;
+        const lastName = document.getElementById('lastName').value;
+        const email = document.getElementById('email').value;
+        const title = document.getElementById('title').value;
+        const abstract = document.getElementById('abstract').value;
+        const fileInput = document.getElementById('fileInput');
+        const fileName = fileInput.files[0] ? fileInput.files[0].name : 'Aucun fichier sélectionné';
+
+        if(!firstName || !lastName || !email || !title || !abstract) {
+            alert('Veuillez remplir tous les champs obligatoires.');
+            return;
+        }
+
+        const body = `-----------------------------------------------------------
+JOURNAL OF MATERIALS AND STRUCTURES (JMS)
+New manuscript submission
+-----------------------------------------------------------
+
+AUTHOR INFORMATION:
+- First name: ${firstName}
+- Last name: ${lastName}
+- Email: ${email}
+
+MANUSCRIPT INFORMATION:
+- Title: ${title}
+- Abstract: ${abstract}
+
+ATTACHMENT:
+- File name: ${fileName}
+- Please find the article file attached to this email.
+
+-----------------------------------------------------------
+This submission was sent via the JMS online submission system.
+-----------------------------------------------------------`;
+
+        navigator.clipboard.writeText(body).then(() => {
+            const msgDiv = document.getElementById('formMessage');
+            msgDiv.style.display = 'block';
+            msgDiv.style.background = '#d4edda';
+            msgDiv.style.color = '#155724';
+            msgDiv.style.padding = '1rem';
+            msgDiv.style.borderRadius = '15px';
+            msgDiv.innerHTML = '✅ Informations copiées ! Allez dans Gmail, collez (Ctrl+V), joignez votre fichier et envoyez.';
+            setTimeout(() => {
+                msgDiv.style.display = 'none';
+            }, 4000);
+        });
+    }
+
+    // Afficher le nom du fichier sélectionné
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const fileName = e.target.files[0] ? e.target.files[0].name : 'No file selected';
+        document.getElementById('fileNameDisplay').innerText = fileName;
+    });
+
+    // Téléchargement templates
+    function downloadTemplate() {
+        const content = "Journal of Materials and Structures (JMS)\nManuscript Template\n\nTitle:\n\nAuthors:\n\nAffiliations:\n\nAbstract:\n\nKeywords:\n\n1. Introduction\n2. Materials and Methods\n3. Results and Discussion\n4. Conclusion\n\nReferences\n\nAcknowledgements";
+        const blob = new Blob([content], {type: 'application/msword'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'JMS_Template.docx';
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
+    function downloadCoverLetter() {
+        const content = "Journal of Materials and Structures (JMS)\nCover Letter\n\nDate:\n\nTo the Editor-in-Chief,\n\nSubject: Submission of manuscript entitled \"[TITLE]\"\n\nDear Editor,\n\nPlease find attached our manuscript entitled \"[TITLE]\" which we submit for consideration in the Journal of Materials and Structures.\n\nWe confirm that:\n- This work is original and has not been published elsewhere\n- All authors have approved the manuscript\n- There is no conflict of interest\n\nCorresponding author:\nName:\nEmail:\n\nSincerely,\n[Signature]";
+        const blob = new Blob([content], {type: 'application/msword'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'JMS_Cover_Letter.docx';
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
+    // ADMIN FUNCTIONS
+    function unlockAdmin() {
+        const password = document.getElementById('adminPassword').value;
+        if(password.length >= 6) {
+            adminUnlocked = true;
+            adminPasswordHash = password;
+            document.getElementById('adminLocked').style.display = 'none';
+            document.getElementById('adminUnlocked').style.display = 'block';
+            
+            // Charger les valeurs actuelles dans les champs d'édition
+            document.getElementById('editJournalTitle').value = document.getElementById('journal-title-display').innerText;
+            document.getElementById('editDirectorName').value = document.getElementById('director-name-display').innerText;
+            document.getElementById('editAboutText').value = document.getElementById('about-text').innerHTML;
+            document.getElementById('editCallText').value = document.getElementById('call-text').innerHTML;
+            document.getElementById('editCommitteeText').value = document.getElementById('committee-text').innerHTML;
+        } else {
+            alert('Le mot de passe doit contenir au moins 6 caractères.');
+        }
+    }
+
+    function saveAdminChanges() {
+        if(!adminUnlocked) return;
+        
+        const newTitle = document.getElementById('editJournalTitle').value;
+        const newDirector = document.getElementById('editDirectorName').value;
+        const newAbout = document.getElementById('editAboutText').value;
+        const newCall = document.getElementById('editCallText').value;
+        const newCommittee = document.getElementById('editCommitteeText').value;
+        
+        // Mettre à jour l'affichage
+        document.getElementById('journal-title-display').innerHTML = newTitle;
+        document.getElementById('home-title').innerHTML = newTitle;
+        document.getElementById('director-name-display').innerHTML = newDirector;
+        document.getElementById('contact-name').innerHTML = newDirector;
+        document.getElementById('footer-title').innerHTML = newTitle;
+        document.getElementById('footer-director').innerHTML = newDirector;
+        document.getElementById('about-text').innerHTML = newAbout;
+        document.getElementById('call-text').innerHTML = newCall;
+        document.getElementById('committee-text').innerHTML = newCommittee;
+        
+        alert('✅ Toutes les modifications ont été sauvegardées !');
+    }
+
+    function logoutAdmin() {
+        adminUnlocked = false;
+        adminPasswordHash = '';
+        document.getElementById('adminLocked').style.display = 'block';
+        document.getElementById('adminUnlocked').style.display = 'none';
+        document.getElementById('adminPassword').value = '';
+        navigateTo('home');
+    }
+
+    // Stocker les modifications dans localStorage (persistance)
+    function loadSavedData() {
+        const savedTitle = localStorage.getItem('jms_journal_title');
+        const savedDirector = localStorage.getItem('jms_director_name');
+        const savedAbout = localStorage.getItem('jms_about_text');
+        const savedCall = localStorage.getItem('jms_call_text');
+        const savedCommittee = localStorage.getItem('jms_committee_text');
+        
+        if(savedTitle) {
+            document.getElementById('journal-title-display').innerHTML = savedTitle;
+            document.getElementById('home-title').innerHTML = savedTitle;
+            document.getElementById('footer-title').innerHTML = savedTitle;
+        }
+        if(savedDirector) {
+            document.getElementById('director-name-display').innerHTML = savedDirector;
+            document.getElementById('contact-name').innerHTML = savedDirector;
+            document.getElementById('footer-director').innerHTML = savedDirector;
+        }
+        if(savedAbout) document.getElementById('about-text').innerHTML = savedAbout;
+        if(savedCall) document.getElementById('call-text').innerHTML = savedCall;
+        if(savedCommittee) document.getElementById('committee-text').innerHTML = savedCommittee;
+    }
+    
+    function saveToLocalStorage() {
+        localStorage.setItem('jms_journal_title', document.getElementById('journal-title-display').innerHTML);
+        localStorage.setItem('jms_director_name', document.getElementById('director-name-display').innerHTML);
+        localStorage.setItem('jms_about_text', document.getElementById('about-text').innerHTML);
+        localStorage.setItem('jms_call_text', document.getElementById('call-text').innerHTML);
+        localStorage.setItem('jms_committee_text', document.getElementById('committee-text').innerHTML);
+    }
+    
+    // Surcharger saveAdminChanges pour sauvegarder dans localStorage
+    const originalSave = saveAdminChanges;
+    window.saveAdminChanges = function() {
+        originalSave();
+        saveToLocalStorage();
+    };
+    
+    loadSavedData();
+</script>
+</body>
+</html>
